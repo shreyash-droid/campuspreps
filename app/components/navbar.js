@@ -192,7 +192,6 @@ export default function Navbar() {
               <MobileNavItem href="/select-year?type=papers">Papers</MobileNavItem>
               <MobileNavItem href="/select-year?type=materials">Materials</MobileNavItem>
               <MobileNavItem href="/select-year?type=youtube">YouTube</MobileNavItem>
-              <MobileNavItem href="/favorites">Favorites</MobileNavItem>
               <MobileNavItem href="/#contact">Contact</MobileNavItem>
             </div>
           </div>

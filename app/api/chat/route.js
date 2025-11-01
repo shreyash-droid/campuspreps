@@ -17,7 +17,21 @@ export async function POST(req) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
-    const result = await model.generateContent(message);
+        // Generate content
+    console.log('Generating content...');
+    const prompt = `As an educational AI assistant, help with this question: ${message}
+
+Please format your response in a clear, well-structured way:
+- Use bullet points (•) for lists
+- Use numbered lists (1. 2. 3.) for step-by-step instructions
+- Use **bold text** for important concepts
+- Use separate paragraphs for different topics
+- Keep explanations clear and concise
+- Focus on being helpful for students
+
+Question: ${message}`;
+    
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 

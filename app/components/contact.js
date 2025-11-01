@@ -14,11 +14,46 @@ export default function Contact() {
   const [status, setStatus] = useState({
     submitted: false,
     submitting: false,
-    error: null
+    error: null,
+    testing: false,
+    testResult: null
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const testEmailConfig = async () => {
+    setStatus(prev => ({ ...prev, testing: true, testResult: null }));
+    
+    try {
+      const response = await fetch('/api/test-email');
+      const data = await response.json();
+      
+      console.log('Email test result:', data);
+      
+      setStatus(prev => ({
+        ...prev,
+        testing: false,
+        testResult: data.success ? 'Email configuration is working!' : `Test failed: ${data.error}`
+      }));
+      
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, testResult: null }));
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Email test error:', error);
+      setStatus(prev => ({
+        ...prev,
+        testing: false,
+        testResult: `Test failed: ${error.message}`
+      }));
+      
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, testResult: null }));
+      }, 5000);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -27,7 +62,7 @@ export default function Contact() {
 
     try {
       // Validate form data before submission
-      if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      if (!formData.name?.trim() || !formData.email?.trim() || !formData.subject?.trim() || !formData.message?.trim()) {
         throw new Error('All fields are required');
       }
 
@@ -37,14 +72,29 @@ export default function Contact() {
         throw new Error('Please enter a valid email address');
       }
 
+      console.log('Submitting form data:', { 
+        name: formData.name, 
+        email: formData.email, 
+        subject: formData.subject,
+        messageLength: formData.message.length 
+      });
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim()
+        }),
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       let data;
       try {
@@ -57,12 +107,18 @@ export default function Contact() {
         
         data = JSON.parse(responseText);
         console.log('Parsed response:', data);
-      } catch (e) {
-        console.error('Failed to parse response:', e);
-        throw new Error('Server returned invalid response format');
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error(`Server returned invalid response format. Status: ${response.status}`);
       }
 
-      if (!response.ok || !data.success) {
+      if (!response.ok) {
+        console.error('API request failed:', response.status, data);
+        throw new Error(data.error || data.details || `Request failed with status ${response.status}`);
+      }
+
+      if (!data.success) {
+        console.error('API returned success=false:', data);
         throw new Error(data.error || data.details || 'Failed to send message');
       }
 
@@ -83,6 +139,11 @@ export default function Contact() {
         submitting: false,
         error: error.message || 'Failed to send message. Please try again.'
       });
+
+      // Auto-clear error after 10 seconds
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, error: null }));
+      }, 10000);
     }
   };
 
@@ -153,18 +214,26 @@ export default function Contact() {
               required
             ></textarea>
             <div className="flex flex-col gap-2">
-              <button 
-                type="submit" 
-                className="bg-black text-white py-3 px-6 rounded-md text-lg hover:bg-gray-800 disabled:bg-gray-500"
-                disabled={status.submitting}
-              >
-                {status.submitting ? 'Sending...' : 'Send'}
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-black text-white py-3 px-6 rounded-md text-lg hover:bg-gray-800 disabled:bg-gray-500"
+                  disabled={status.submitting}
+                >
+                  {status.submitting ? 'Sending...' : 'Send'}
+                </button>
+                
+              </div>
               {status.submitted && (
                 <span className="text-green-600 font-medium">Thank you for your message! We&apos;ll get back to you soon.</span>
               )}
               {status.error && (
                 <span className="text-red-600 font-medium">{status.error}</span>
+              )}
+              {status.testResult && (
+                <span className={`font-medium ${status.testResult.includes('working') ? 'text-green-600' : 'text-orange-600'}`}>
+                  {status.testResult}
+                </span>
               )}
             </div>
           </form>

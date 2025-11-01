@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { getSubjectData } from "../data/subjectData";
 
 export default function SubjectTabs() {
   const params = useParams();
@@ -48,32 +49,30 @@ export default function SubjectTabs() {
     return favorites[type].some(f => f.id === itemId);
   };
 
-  // Mock data for each tab
-  const moduleNotes = Array.from({ length: 6 }).map((_, i) => ({
-    id: `note-${i}`,
-    moduleNumber: i + 1,
-    title: `Module ${i + 1} Notes`,
-    subject: subject,
-    year: year
-  }));
+  // Get subject data from our configuration
+  const subjectInfo = getSubjectData(parseInt(year), subject);
 
-  const questionPapers = [
-    { id: 'qp-1', title: 'MID-SEM', type: 'mid-sem', subject, year },
-    { id: 'qp-2', title: 'END-SEM', type: 'end-sem', subject, year }
-  ];
+  // Fallback data if subject not found in configuration
+  const fallbackData = {
+    modules: Array.from({ length: 6 }).map((_, i) => ({
+      id: `${subject}-${year}-${i}`,
+      moduleNumber: i + 1,
+      title: `Module ${i + 1} Notes`,
+      driveUrl: null,
+      subject: subject,
+      year: year
+    })),
+    questionPapers: [
+      { id: `${subject}-${year}-cats`, title: 'CATs', type: 'cats', driveUrl: null, subject, year },
+      { id: `${subject}-${year}-fats`, title: 'FATs', type: 'fats', driveUrl: null, subject, year }
+    ],
+    youtubeLinks: []
+  };
 
-  const youtubeLinks = Array.from({ length: 4 }).map((_, i) => ({
-    id: `yt-${i}`,
-    title: `Module ${i + 1} Video Tutorial`,
-    moduleNumber: i + 1,
-    url: `https://www.youtube.com/link${i + 1}`,
-    subject,
-    year
-  }));
+  const currentData = subjectInfo || fallbackData;
 
   return (
     <div className="text-white w-[90%] mx-auto mt-8">
-      {/* ✅ Back Button to Subjects Page */}
       <Link
         href={`/subjects/${year}`}
         className="flex items-center text-white mb-4 hover:text-blue-400 transition"
@@ -82,7 +81,7 @@ export default function SubjectTabs() {
         <span>Back to Subjects</span>
       </Link>
 
-      <h1 className="text-3xl font-bold capitalize py-2 mb-4">{subject}</h1>
+      <h1 className="text-3xl font-bold capitalize py-2 mb-4">{subjectInfo?.name || subject}</h1>
 
       {/* Tabs */}
       <div className="flex w-full rounded-full overflow-hidden border border-white mb-6">
@@ -103,38 +102,75 @@ export default function SubjectTabs() {
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Module Notes Tab */}
       {activeTab === "notes" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4">
-          {moduleNotes.map((note) => (
+          {currentData.modules.map((module) => (
             <div
-              key={note.id}
-              className="bg-white text-black p-4 rounded-lg flex justify-between items-center hover:shadow-lg transition-shadow"
+              key={module.id}
+              className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-shadow"
             >
-              <span className="text-lg">Module - {note.moduleNumber}</span>
-              <button 
-                onClick={() => toggleFavorite('notes', note)} 
-                className="text-2xl text-yellow-500 hover:scale-110 transition-transform"
-              >
-                {isItemFavorited('notes', note.id) ? "★" : "☆"}
-              </button>
+              <div className="flex justify-between items-center">
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => {
+                    if (module.driveUrl) {
+                      window.open(module.driveUrl, '_blank');
+                    }
+                  }}
+                >
+                  <span className="text-lg font-semibold">Module - {module.moduleNumber}</span>
+                  {module.driveUrl ? (
+                    <p className="text-sm text-green-600 mt-1">Click to open notes</p>
+                  ) : (
+                    <p className="text-sm text-gray-500 mt-1">Coming soon</p>
+                  )}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite('notes', module);
+                  }}
+                  className="text-2xl hover:scale-110 transition-transform ml-2"
+                >
+                  {isItemFavorited('notes', module.id) ? "★" : "☆"}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Question Papers Tab */}
       {activeTab === "qp" && (
         <div className="grid grid-cols-1 px-40 sm:grid-cols-2 gap-4 py-2">
-          {questionPapers.map((paper) => (
-            <div 
+          {currentData.questionPapers.map((paper) => (
+            <div
               key={paper.id}
-              className="relative bg-white text-black p-4 rounded-lg hover:shadow-lg transition-all group"
+              className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-all"
             >
               <div className="flex justify-between items-center">
-                <span className="font-semibold">{paper.title}</span>
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => {
+                    if (paper.driveUrl) {
+                      window.open(paper.driveUrl, '_blank');
+                    }
+                  }}
+                >
+                  <span className="font-semibold">{paper.title}</span>
+                  {paper.driveUrl ? (
+                    <p className="text-sm text-green-600 mt-1">Click to open</p>
+                  ) : (
+                    <p className="text-sm text-gray-500 mt-1">Coming soon</p>
+                  )}
+                </div>
                 <button
-                  onClick={() => toggleFavorite('questionPapers', paper)}
-                  className="text-2xl text-yellow-500 hover:scale-110 transition-transform"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite('questionPapers', paper);
+                  }}
+                  className="text-2xl hover:scale-110 transition-transform ml-2"
                 >
                   {isItemFavorited('questionPapers', paper.id) ? "★" : "☆"}
                 </button>
@@ -144,32 +180,40 @@ export default function SubjectTabs() {
         </div>
       )}
 
+      {/* YouTube Links Tab */}
       {activeTab === "yt" && (
         <div className="space-y-4">
-          {youtubeLinks.map((link) => (
-            <div 
-              key={link.id}
-              className="bg-white text-black p-4 rounded-lg flex justify-between items-center hover:shadow-lg transition-shadow"
-            >
-              <div className="flex-1">
-                <span className="font-semibold">Module {link.moduleNumber} - </span>
-                <a 
-                  href={link.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  Watch Video
-                </a>
-              </div>
-              <button
-                onClick={() => toggleFavorite('youtubeLinks', link)}
-                className="text-2xl text-yellow-500 hover:scale-110 transition-transform"
+          {currentData.youtubeLinks.length > 0 ? (
+            currentData.youtubeLinks.map((link) => (
+              <div
+                key={link.id}
+                className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-shadow"
               >
-                {isItemFavorited('youtubeLinks', link.id) ? "★" : "☆"}
-              </button>
+                <div className="flex justify-between items-center">
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => window.open(link.url, '_blank')}
+                  >
+                    <span className="font-semibold">Module {link.moduleNumber} - </span>
+                    <span className="text-blue-600 hover:underline">{link.title}</span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite('youtubeLinks', link);
+                    }}
+                    className="text-2xl hover:scale-110 transition-transform ml-2"
+                  >
+                    {isItemFavorited('youtubeLinks', link.id) ? "★" : "☆"}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="bg-white text-black p-4 rounded-lg text-center">
+              <span>No video tutorials available yet</span>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

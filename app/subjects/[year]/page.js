@@ -5,10 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import Navbar from '../../components/navbar';
 
 const yearData = {
-  "1": ["Maths", "Physics", "Chemistry", "English"],
-  "2": ["DSA", "DBMS", "OOP", "CN"],
-  "3": ["AI", "ML", "OS", "Compiler"],
-  "4": ["Cloud", "Blockchain", "IoT", "Project"],
+  "1": ["Mathematics", "Physics", "Chemistry", "English"],
+  "2": ["DSA", "DBMS", "OOPs", "CN"],
+  "3": ["AI", "Software Engineering", "Probability & Statistics", "Compiler"],
+  "4": ["Cloud", "Blockchain", "Robot Modelling", "Project"],
 };
 
 export default function SubjectPage() {
