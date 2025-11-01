@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "./context/AuthContext";
+import { FavoritesProvider } from "./context/FavoritesContext";
 import AIChatButtonWrapper from './components/AIChatButtonWrapper';
 import "./globals.css";
 
@@ -25,8 +26,10 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <AIChatButtonWrapper />
+          <FavoritesProvider>
+            {children}
+            <AIChatButtonWrapper />
+          </FavoritesProvider>
         </AuthProvider>
       </body>
     </html>
