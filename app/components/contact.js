@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -98,15 +99,15 @@ export default function Contact() {
             drop a message, and I&apos;ll get back to you promptly. Your time is valuable!
           </p>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <img src="/vector-134.svg" alt="phone" className="w-6 h-6" />
+            <Image src="/vector-134.svg" alt="phone" width={24} height={24} />
             <span>+91 9876543210</span>
           </div>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <img src="/vector-13--stroke-.svg" alt="email" className="w-6 h-6" />
+            <Image src="/vector-13--stroke-.svg" alt="email" width={24} height={24} />
             <span>dummy@gmail.com</span>
           </div>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <img src="/vector-1.svg" alt="location" className="w-6 h-6" />
+            <Image src="/vector-1.svg" alt="location" width={24} height={24} />
             <span>Bhopal</span>
           </div>
         </div>
@@ -160,7 +161,7 @@ export default function Contact() {
                 {status.submitting ? 'Sending...' : 'Send'}
               </button>
               {status.submitted && (
-                <span className="text-green-600 font-medium">Thank you for your message! We'll get back to you soon.</span>
+                <span className="text-green-600 font-medium">Thank you for your message! We&apos;ll get back to you soon.</span>
               )}
               {status.error && (
                 <span className="text-red-600 font-medium">{status.error}</span>

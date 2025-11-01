@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
 // Year data
@@ -48,7 +49,7 @@ export default function YearSelector() {
             >
               {/* Circle Avatar */}
               <div className="w-28 h-24 rounded-full bg-gray-600 overflow-hidden">
-                <img src={year.image} alt={year.title} className="w-full h-full object-cover" />
+                <Image src={year.image} alt={year.title} width={112} height={96} className="w-full h-full object-cover" />
               </div>
 
               {/* Year Title + Subjects */}
