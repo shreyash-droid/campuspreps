@@ -1,22 +1,50 @@
 "use client";
 
 import { useState } from "react";
+import { registerUser } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignupModal({ onClose, onSignup, switchToLogin }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { setUser } = useAuth();
 
-  const handleSignup = (e) => {
+  const validateVITEmail = (email) => {
+    return email.toLowerCase().endsWith('@vitstudent.ac.in');
+  };
+
+  const handleSignup = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (name && email && password) {
-      console.log("Signed up with:", name, email);
-      localStorage.setItem("loggedIn", "true");
+    if (!name || !email || !password) {
+      setError("Please fill in all fields!");
+      return;
+    }
+
+    if (!validateVITEmail(email)) {
+      setError("Please use your VIT email address");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const userData = await registerUser({ name, email, password });
+      setUser(userData);
       onSignup();
       onClose();
-    } else {
-      alert("Please fill in all fields!");
+    } catch (error) {
+      setError(error.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,6 +64,7 @@ export default function SignupModal({ onClose, onSignup, switchToLogin }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="border p-3 rounded text-black placeholder-gray-500"
+            disabled={loading}
           />
           <input
             type="email"
@@ -43,6 +72,7 @@ export default function SignupModal({ onClose, onSignup, switchToLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border p-3 rounded text-black placeholder-gray-500"
+            disabled={loading}
           />
           <input
             type="password"
@@ -50,13 +80,30 @@ export default function SignupModal({ onClose, onSignup, switchToLogin }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border p-3 rounded text-black placeholder-gray-500"
+            disabled={loading}
           />
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
-            className="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+            className={`bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition flex items-center justify-center ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
+            disabled={loading}
           >
-            Sign Up
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                Signing up...
+              </>
+            ) : (
+              'Sign Up'
+            )}
           </button>
         </form>
 

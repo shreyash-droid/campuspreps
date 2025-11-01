@@ -10,17 +10,79 @@ export default function Contact() {
     message: "",
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState({
+    submitted: false,
+    submitting: false,
+    error: null
+  });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormData({ name: "", email: "", subject: "", message: "" });
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    setStatus({ submitted: false, submitting: true, error: null });
+
+    try {
+      // Validate form data before submission
+      if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+        throw new Error('All fields are required');
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      let data;
+      try {
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+        
+        if (!responseText) {
+          throw new Error('Empty response from server');
+        }
+        
+        data = JSON.parse(responseText);
+        console.log('Parsed response:', data);
+      } catch (e) {
+        console.error('Failed to parse response:', e);
+        throw new Error('Server returned invalid response format');
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.details || 'Failed to send message');
+      }
+
+      // Success handling
+      console.log('Message sent successfully:', data);
+      setStatus({ submitted: true, submitting: false, error: null });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, submitted: false }));
+      }, 5000);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setStatus({
+        submitted: false,
+        submitting: false,
+        error: error.message || 'Failed to send message. Please try again.'
+      });
+    }
   };
 
   return (
@@ -90,8 +152,19 @@ export default function Contact() {
               required
             ></textarea>
             <div className="flex flex-col gap-2">
-              <button type="submit" className="bg-black text-white py-3 px-6 rounded-md text-lg hover:bg-gray-800">Send</button>
-              {submitted && <span className="text-green-600 font-medium">Thank you for your message!</span>}
+              <button 
+                type="submit" 
+                className="bg-black text-white py-3 px-6 rounded-md text-lg hover:bg-gray-800 disabled:bg-gray-500"
+                disabled={status.submitting}
+              >
+                {status.submitting ? 'Sending...' : 'Send'}
+              </button>
+              {status.submitted && (
+                <span className="text-green-600 font-medium">Thank you for your message! We'll get back to you soon.</span>
+              )}
+              {status.error && (
+                <span className="text-red-600 font-medium">{status.error}</span>
+              )}
             </div>
           </form>
         </div>

@@ -1,31 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import LoginModal from "../components/LoginModal";
 import SignupModal from "../components/SignupModal";
+import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 
 export default function Hero() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const loggedIn = localStorage.getItem("loggedIn") === "true";
-    setIsLoggedIn(loggedIn);
-  }, []);
+  const { user, isAuthenticated } = useAuth();
 
   const handleLogin = () => {
     setShowLogin(false);
-    setIsLoggedIn(true);
-    localStorage.setItem("loggedIn", "true");
   };
 
   const handleSignup = () => {
     setShowSignup(false);
-    setIsLoggedIn(true);
-    localStorage.setItem("loggedIn", "true");
   };
 
   return (
@@ -52,17 +44,17 @@ export default function Hero() {
       )}
 
       <div className="flex flex-col items-start text-white z-10 text-left">
-        <h2 className="text-5xl md:text-7xl font-extrabold mb-4 font-roboto">Hello!!</h2>
+        <h2 className="text-3xl md:text-6xl font-extrabold mb-4 font-roboto">Hello!!</h2>
         <p className="text-3xl md:text-5xl leading-snug mb-10 font-roboto">
           Welcome to your <span className="font-bold text-blue-600">one</span> <br />
           <span className="font-bold text-blue-600">stop solution</span> for all<br />
           the preparations..
         </p>
 
-        {isLoggedIn ? (
+        {isAuthenticated ? (
           <Link
-            href="/start"
-            className="bg-blue-600 hover:bg-blue-700 transition duration-300 text-white text-xl md:text-2xl font-semibold py-5 px-10 rounded-full shadow-lg"
+            href="/select-year"
+            className="bg-blue-600 hover:bg-blue-700 transition duration-300 text-white text-xl md:text-2xl font-medium py-5 px-10 rounded-full shadow-lg"
           >
             Start Preparing →
           </Link>
@@ -70,13 +62,13 @@ export default function Hero() {
           <div className="flex flex-col md:flex-row gap-5 w-full md:w-auto">
             <button
               onClick={() => setShowSignup(true)}
-              className="bg-blue-600 hover:bg-blue-700 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-semibold py-5 px-10 rounded-full shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-medium py-4 px-10 rounded-full shadow-lg"
             >
               Sign-up
             </button>
             <button
               onClick={() => setShowLogin(true)}
-              className="bg-none hover:bg-gray-800 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-semibold py-4 px-10 rounded-full border-4 border-white"
+              className="bg-none hover:bg-gray-800 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-medium py-4 px-10 rounded-full border-2 border-white shadow-amber-50"
             >
               Login
             </button>

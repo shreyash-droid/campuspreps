@@ -1,21 +1,44 @@
 "use client";
 
 import React, { useState } from "react";
+import { loginUser } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginModal({ onClose, onLogin, switchToSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { setUser } = useAuth();
 
-  const handleLogin = (e) => {
+  const validateVITEmail = (email) => {
+    return email.toLowerCase().endsWith('@vitstudent.ac.in');
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (email && password) {
-      console.log("Logged in with:", email);
-      localStorage.setItem("loggedIn", "true");
+    if (!email || !password) {
+      setError("Please fill in all fields!");
+      return;
+    }
+
+    if (!validateVITEmail(email)) {
+      setError("Please use your VIT email address");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const userData = await loginUser({ email, password });
+      setUser(userData);
       onLogin();
       onClose();
-    } else {
-      alert("Please fill in all fields!");
+    } catch (error) {
+      setError(error.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,6 +58,7 @@ export default function LoginModal({ onClose, onLogin, switchToSignup }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border p-3 rounded text-black placeholder-gray-500"
+            disabled={loading}
           />
           <input
             type="password"
@@ -42,13 +66,30 @@ export default function LoginModal({ onClose, onLogin, switchToSignup }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border p-3 rounded text-black placeholder-gray-500"
+            disabled={loading}
           />
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
-            className="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+            className={`bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition flex items-center justify-center ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
+            disabled={loading}
           >
-            Login
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                Logging in...
+              </>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
 
