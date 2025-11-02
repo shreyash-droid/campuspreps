@@ -1,6 +1,7 @@
 "use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Use relative URLs for API calls so they work on both localhost and Vercel
+const API_URL = '/api';
 
 export const registerUser = async (userData) => {
   try {

@@ -52,8 +52,8 @@ export default function ProfilePage() {
       const subjectInfo = getSubjectData(parseInt(item.year), item.subject);
       
       if (type === 'notes' && subjectInfo?.modules) {
-        const module = subjectInfo.modules.find(m => m.id === item.id);
-        return module?.driveUrl;
+        const moduleItem = subjectInfo.modules.find(m => m.id === item.id);
+        return moduleItem?.driveUrl;
       }
       
       if (type === 'questionPapers' && subjectInfo?.questionPapers) {
