@@ -160,15 +160,19 @@ export default function Contact() {
             drop a message, and I&apos;ll get back to you promptly. Your time is valuable!
           </p>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <Image src="/vector-134.svg" alt="phone" width={24} height={24} />
+            
             <span>+91 9876543210</span>
           </div>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <Image src="/vector-13--stroke-.svg" alt="email" width={24} height={24} />
-            <span>dummy@gmail.com</span>
+            
+            <span>shreyash.khare2023@vitstudent.ac.in</span>
           </div>
           <div className="flex items-center gap-4 text-lg font-medium">
-            <Image src="/vector-1.svg" alt="location" width={24} height={24} />
+            
+            <span>abhigyan.sharma2023@vitstudent.ac.in</span>
+          </div>
+          <div className="flex items-center gap-4 text-lg font-medium">
+            
             <span>Bhopal</span>
           </div>
         </div>
