@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 
 export async function POST(req) {
   console.log('Contact form submission received');

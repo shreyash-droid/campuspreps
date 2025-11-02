@@ -19,7 +19,7 @@ export default function FavoritesPage() {
     if (isAuthenticated) {
       refreshFavorites();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshFavorites]);
 
   useEffect(() => {
     // Group favorites by type
