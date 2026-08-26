@@ -334,13 +334,7 @@ export const subjectData = {
           id: "dsa-2-yt1",
           title: "Arrays & Strings Tutorial",
           moduleNumber: 1,
-          url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
-        },
-        {
-          id: "dsa-2-yt2",
-          title: "Linked Lists Tutorial",
-          moduleNumber: 2,
-          url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
+          url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz"
         }
       ]
     },
@@ -750,7 +744,14 @@ export const subjectData = {
           downloadUrl: "https://drive.google.com/uc?export=download&id=1FbyjFy0XohstcpoDpNK3OopLWkKJDuvg"
         }
       ],
-      youtubeLinks: []
+      youtubeLinks: [
+        {
+          id: "cloud-1-yt1",
+          title: "Module 1 Video Tutorial",
+          moduleNumber: 1,
+          url: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiHRHVUtR-O52MsrdUSrzuy4"
+        }
+      ]
     },
     "blockchain": {
       name: "Blockchain Technology",

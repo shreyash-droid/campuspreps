@@ -1,89 +1,67 @@
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
+import { getAllSubjectsForYear } from "../data/subjectData";
 
-// Year data
-const yearData = [
-  {
-    title: "1st Year",
-    subjects: ["Mathematics", "Physics", "Chemistry", "English"],
-    image: "/1st.png",
-  },
-  {
-    title: "2nd Year",
-    subjects: ["DSA", "DBMS", "OOPS", "CN"],
-    image: "/2nd.png",
-  },
-  {
-    title: "3rd Year",
-    subjects: ["AI", "Software", "Probability", "Compiler"],
-    image: "/3rd.png",
-  },
-  {
-    title: "4th Year",
-    subjects: ["Cloud", "Blockchain", "Robot Modelling", "Project"],
-    image: "/4th.png",
-  },
+const years = [
+  { title: "First Year", image: "/1st.png" },
+  { title: "Second Year", image: "/2nd.png" },
+  { title: "Third Year", image: "/3rd.png" },
+  { title: "Fourth Year", image: "/4th.png" },
 ];
 
 export default function YearSelector() {
   return (
-    <section className="w-[95%] max-w-7xl mx-auto mt-8 text-white ">
-      {/* Back Button */}
-      <Link href="/" className="flex items-center text-white mb-8 hover:text-blue-400 transition">
-        <ArrowLeft className="w-8 h-8 mr-2" />
-        <span>Home</span>
+    <section className="mx-auto w-[92%] max-w-6xl pt-10 pb-12 text-[var(--fg)]">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/[0.03] px-3.5 py-1.5 text-sm text-[var(--fg-2)] transition hover:text-[var(--fg)]"
+      >
+        <ArrowLeft className="h-4 w-4" /> Home
       </Link>
 
-      <h1 className="text-3xl font-bold mb-8 text-center">Select Your Year</h1>
+      <div className="mt-10 mb-10 text-center">
+        <span className="eyebrow">Browse resources</span>
+        <h1 className="display mt-3 text-4xl md:text-5xl">Select your year</h1>
+      </div>
 
-      {/* Horizontal Year Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ">
-        {yearData.map((year, index) => (
-          <Link href={`/subjects/${index + 1}`} key={index}>
-            <div
-              className="bg-gradient-to-r from-white to-gray-50 rounded-[20px] p-6 
-              shadow-md hover:shadow-lg transition-all duration-300 ease-in-out
-              hover:scale-105 hover:border-2 cursor-pointer "
-            >
-              {/* Student Avatar/Illustration */}
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 
-                overflow-hidden border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
-                  <Image 
-                    src={year.image} 
-                    alt={year.title} 
-                    width={64} 
-                    height={64} 
-                    className="w-full h-full object-cover" 
-                  />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {years.map((year, index) => {
+          const subjects = Object.values(getAllSubjectsForYear(index + 1)).map((s) => s.name);
+          return (
+            <Link href={`/subjects/${index + 1}`} key={index} className="group">
+              <div className="card-surface h-full rounded-3xl p-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <div className="h-14 w-14 overflow-hidden rounded-full border border-[var(--line-strong)]">
+                    <Image
+                      src={year.image}
+                      alt={year.title}
+                      width={56}
+                      height={56}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-[var(--fg-3)] transition group-hover:translate-x-1 group-hover:text-[var(--accent)]" />
+                </div>
+
+                <h3 className="display text-xl text-[var(--fg)]">{year.title}</h3>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {subjects.map((subject, i) => (
+                    <span
+                      key={i}
+                      className="rounded-full border border-[var(--line)] bg-white/[0.03] px-3 py-1 text-xs text-[var(--fg-2)]"
+                    >
+                      {subject}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              {/* Year Title */}
-              <h3 className="text-xl font-bold mb-4 text-center text-gray-800 
-              group-hover:text-blue-700 transition-colors">
-                {year.title}
-              </h3>
-
-              {/* Subjects List */}
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                {year.subjects.map((subject, i) => (
-                  <div 
-                    key={i} 
-                    className="text-center py-1 px-2 bg-gray-100 rounded-lg 
-                    group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors"
-                  >
-                    {subject}
-                  </div>
-                ))}
-              </div>
-
-              
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

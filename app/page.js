@@ -3,11 +3,12 @@ import Navbar from './components/navbar';
 import Strip from './components/strip';
 import Services from './components/services';
 import Contact from './components/contact';
-import Link from "next/link";
+import AuroraBackground from './components/AuroraBackground';
 
 export default function Home() {
   return (
-    <div>
+    <div className="relative min-h-screen text-white">
+      <AuroraBackground />
       <Navbar />
       <Hero />
       <Strip />

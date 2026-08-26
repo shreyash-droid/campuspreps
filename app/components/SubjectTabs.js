@@ -2,220 +2,167 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { ArrowLeft, Star, ExternalLink } from "lucide-react";
+import { useState } from "react";
 import { getSubjectData } from "../data/subjectData";
+import { useFavorites } from "../context/FavoritesContext";
+
+const TABS = [
+  { key: "notes", label: "Module Notes" },
+  { key: "qp", label: "Question Papers" },
+  { key: "yt", label: "YouTube Links" },
+];
 
 export default function SubjectTabs() {
-  const params = useParams();
-  const { year, subject } = params;
+  const { year, subject } = useParams();
   const [activeTab, setActiveTab] = useState("notes");
-  const [favorites, setFavorites] = useState({
-    notes: [],
-    questionPapers: [],
-    youtubeLinks: []
-  });
+  const { toggleFavorite, isFavorited } = useFavorites();
 
-  // Load favorites from localStorage on component mount
-  useEffect(() => {
-    const storedFavorites = localStorage.getItem('favorites');
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites));
-    }
-  }, []);
-
-  // Save favorites to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  const toggleFavorite = (type, item) => {
-    setFavorites(prev => {
-      const currentTypeArray = prev[type];
-      const exists = currentTypeArray.some(f => f.id === item.id);
-      
-      const newFavorites = {
-        ...prev,
-        [type]: exists
-          ? currentTypeArray.filter(f => f.id !== item.id)
-          : [...currentTypeArray, item]
-      };
-      
-      return newFavorites;
-    });
-  };
-
-  const isItemFavorited = (type, itemId) => {
-    return favorites[type].some(f => f.id === itemId);
-  };
-
-  // Get subject data from our configuration
   const subjectInfo = getSubjectData(parseInt(year), subject);
+  const subjectName = subjectInfo?.name || subject;
 
-  // Fallback data if subject not found in configuration
   const fallbackData = {
     modules: Array.from({ length: 6 }).map((_, i) => ({
       id: `${subject}-${year}-${i}`,
       moduleNumber: i + 1,
       title: `Module ${i + 1} Notes`,
       driveUrl: null,
-      subject: subject,
-      year: year
     })),
     questionPapers: [
-      { id: `${subject}-${year}-cats`, title: 'CATs', type: 'cats', driveUrl: null, subject, year },
-      { id: `${subject}-${year}-fats`, title: 'FATs', type: 'fats', driveUrl: null, subject, year }
+      { id: `${subject}-${year}-cats`, title: "CATs", type: "cats", driveUrl: null },
+      { id: `${subject}-${year}-fats`, title: "FATs", type: "fats", driveUrl: null },
     ],
-    youtubeLinks: []
+    youtubeLinks: [],
   };
 
-  const currentData = subjectInfo || fallbackData;
+  const data = subjectInfo || fallbackData;
+
+  // Attach subject/year so the profile page can label saved items.
+  const decorate = (item) => ({ ...item, subject: subjectName, year });
+
+  const FavStar = ({ type, item }) => {
+    const active = isFavorited(type, item.id);
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(type, decorate(item));
+        }}
+        className="ml-3 shrink-0 transition hover:scale-110"
+        aria-label={active ? "Remove from favorites" : "Add to favorites"}
+      >
+        <Star
+          className={`h-5 w-5 ${active ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[var(--fg-3)]"}`}
+        />
+      </button>
+    );
+  };
+
+  const openable = (url) => (url ? "cursor-pointer" : "");
 
   return (
-    <div className="text-white w-[90%] mx-auto mt-8">
+    <section className="mx-auto w-[92%] max-w-4xl pt-10 pb-12 text-[var(--fg)]">
       <Link
         href={`/subjects/${year}`}
-        className="flex items-center text-white mb-4 hover:text-blue-400 transition"
+        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/[0.03] px-3.5 py-1.5 text-sm text-[var(--fg-2)] transition hover:text-[var(--fg)]"
       >
-        <ArrowLeft className="w-8 h-8 mr-2" />
-        <span>Back to Subjects</span>
+        <ArrowLeft className="h-4 w-4" /> Back to subjects
       </Link>
 
-      <h1 className="text-3xl font-bold capitalize py-2 mb-4">{subjectInfo?.name || subject}</h1>
+      <div className="mt-10 mb-8">
+        <span className="eyebrow">Study resources</span>
+        <h1 className="display mt-3 text-4xl capitalize md:text-5xl">{subjectName}</h1>
+      </div>
 
       {/* Tabs */}
-      <div className="flex w-full rounded-full overflow-hidden border border-white mb-6">
-        {["notes", "qp", "yt"].map((tabKey) => (
+      <div className="mb-8 grid grid-cols-3 gap-1 rounded-full border border-[var(--line)] bg-white/[0.03] p-1 text-sm font-medium">
+        {TABS.map((tab) => (
           <button
-            key={tabKey}
-            onClick={() => setActiveTab(tabKey)}
-            className={`flex-1 px-4 py-2 font-semibold transition ${
-              activeTab === tabKey ? "bg-white text-black" : "bg-transparent"
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`rounded-full py-2.5 transition ${
+              activeTab === tab.key
+                ? "bg-[var(--fg)] text-[#0a0a0b]"
+                : "text-[var(--fg-2)] hover:text-[var(--fg)]"
             }`}
           >
-            {{
-              notes: "Module-wise Notes",
-              qp: "Question Papers",
-              yt: "Youtube Links",
-            }[tabKey]}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Module Notes Tab */}
+      {/* Notes */}
       {activeTab === "notes" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4">
-          {currentData.modules.map((module) => (
-            <div
-              key={module.id}
-              className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-center">
-                <div
-                  className="flex-1 cursor-pointer"
-                  onClick={() => {
-                    if (module.driveUrl) {
-                      window.open(module.driveUrl, '_blank');
-                    }
-                  }}
-                >
-                  <span className="text-lg font-semibold">Module - {module.moduleNumber}</span>
-                  {module.driveUrl ? (
-                    <p className="text-sm text-green-600 mt-1">Click to open notes</p>
-                  ) : (
-                    <p className="text-sm text-gray-500 mt-1">Coming soon</p>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite('notes', module);
-                  }}
-                  className="text-2xl hover:scale-110 transition-transform ml-2"
-                >
-                  {isItemFavorited('notes', module.id) ? "★" : "☆"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Question Papers Tab */}
-      {activeTab === "qp" && (
-        <div className="grid grid-cols-1 px-40 sm:grid-cols-2 gap-4 py-2">
-          {currentData.questionPapers.map((paper) => (
-            <div
-              key={paper.id}
-              className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-all"
-            >
-              <div className="flex justify-between items-center">
-                <div
-                  className="flex-1 cursor-pointer"
-                  onClick={() => {
-                    if (paper.driveUrl) {
-                      window.open(paper.driveUrl, '_blank');
-                    }
-                  }}
-                >
-                  <span className="font-semibold">{paper.title}</span>
-                  {paper.driveUrl ? (
-                    <p className="text-sm text-green-600 mt-1">Click to open</p>
-                  ) : (
-                    <p className="text-sm text-gray-500 mt-1">Coming soon</p>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite('questionPapers', paper);
-                  }}
-                  className="text-2xl hover:scale-110 transition-transform ml-2"
-                >
-                  {isItemFavorited('questionPapers', paper.id) ? "★" : "☆"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* YouTube Links Tab */}
-      {activeTab === "yt" && (
-        <div className="space-y-4">
-          {currentData.youtubeLinks.length > 0 ? (
-            currentData.youtubeLinks.map((link) => (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {data.modules.map((module) => (
+            <div key={module.id} className="card-surface flex items-center justify-between rounded-2xl p-5">
               <div
-                key={link.id}
-                className="bg-white text-black p-4 rounded-lg hover:shadow-lg transition-shadow"
+                className={`flex-1 ${openable(module.driveUrl)}`}
+                onClick={() => module.driveUrl && window.open(module.driveUrl, "_blank")}
               >
-                <div className="flex justify-between items-center">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => window.open(link.url, '_blank')}
-                  >
-                    <span className="font-semibold">Module {link.moduleNumber} - </span>
-                    <span className="text-blue-600 hover:underline">{link.title}</span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite('youtubeLinks', link);
-                    }}
-                    className="text-2xl hover:scale-110 transition-transform ml-2"
-                  >
-                    {isItemFavorited('youtubeLinks', link.id) ? "★" : "☆"}
-                  </button>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[var(--fg)]">Module {module.moduleNumber}</span>
+                  {module.driveUrl && <ExternalLink className="h-3.5 w-3.5 text-[var(--accent)]" />}
                 </div>
+                <p className={`mt-0.5 text-sm ${module.driveUrl ? "text-[var(--accent)]" : "text-[var(--fg-3)]"}`}>
+                  {module.driveUrl ? "Open notes" : "Coming soon"}
+                </p>
+              </div>
+              <FavStar type="notes" item={module} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Question papers */}
+      {activeTab === "qp" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {data.questionPapers.map((paper) => (
+            <div key={paper.id} className="card-surface flex items-center justify-between rounded-2xl p-5">
+              <div
+                className={`flex-1 ${openable(paper.driveUrl)}`}
+                onClick={() => paper.driveUrl && window.open(paper.driveUrl, "_blank")}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[var(--fg)]">{paper.title}</span>
+                  {paper.driveUrl && <ExternalLink className="h-3.5 w-3.5 text-[var(--accent)]" />}
+                </div>
+                <p className={`mt-0.5 text-sm ${paper.driveUrl ? "text-[var(--accent)]" : "text-[var(--fg-3)]"}`}>
+                  {paper.driveUrl ? "Open paper" : "Coming soon"}
+                </p>
+              </div>
+              <FavStar type="questionPapers" item={paper} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* YouTube */}
+      {activeTab === "yt" && (
+        <div className="grid grid-cols-1 gap-3">
+          {data.youtubeLinks.length > 0 ? (
+            data.youtubeLinks.map((link) => (
+              <div key={link.id} className="card-surface flex items-center justify-between rounded-2xl p-5">
+                <div className="flex-1 cursor-pointer" onClick={() => window.open(link.url, "_blank")}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[var(--fg)]">
+                      {link.moduleNumber ? `Module ${link.moduleNumber} — ` : ""}
+                      {link.title}
+                    </span>
+                    <ExternalLink className="h-3.5 w-3.5 text-[var(--accent)]" />
+                  </div>
+                  <p className="mt-0.5 text-sm text-[var(--accent)]">Watch video</p>
+                </div>
+                <FavStar type="youtubeLinks" item={link} />
               </div>
             ))
           ) : (
-            <div className="bg-white text-black p-4 rounded-lg text-center">
-              <span>No video tutorials available yet</span>
+            <div className="card-surface rounded-2xl p-8 text-center text-[var(--fg-2)]">
+              No video tutorials available yet.
             </div>
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -2,201 +2,140 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-
-const NavItem = ({ href, children }) => (
-  <Link 
-    href={href}
-    className="text-white/80 hover:text-white transition-colors px-4 py-2 text-lg font-light"
-  >
-    {children}
-  </Link>
-);
-
-const MobileNavItem = ({ href, children }) => (
-  <Link
-    href={href}
-    className="text-white/80 hover:text-white block px-3 py-2 text-base font-medium transition-colors"
-  >
-    {children}
-  </Link>
-);
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   useEffect(() => {
-    // Check authentication status
-    const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      if (token && userData) {
-        setIsLoggedIn(true);
-        try {
-          setUserInfo(JSON.parse(userData));
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-          handleLogout();
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-      }
-    };
-
-    checkAuth();
-
-    // Handle clicking outside of menu
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('loggedIn');
-    
-    // Reset state
-    setIsLoggedIn(false);
-    setUserInfo(null);
-    setShowProfileMenu(false);
-    
-    // Force page reload to reset all app state
-    window.location.href = '/';
-  };
-
-  const handleProfileClick = () => {
-    if (isLoggedIn) {
-      router.push('/profile');
-      setShowProfileMenu(false);
-    } else {
-      router.push('/');
-    }
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
-      <nav className="bg-black/50 backdrop-blur-md border-black rounded-2xl py-2 max-w-8xl mx-auto">
-        <div className="px-4 sm:px-6">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo and Brand */}
-            <Link
-              href="/"
-              className="flex items-center space-x-2 text-white hover:opacity-90 transition-opacity"
-            >
-              <Image
-                src="/cap.svg"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8"
-              />
-              <span className="text-xl font-semibold">Campus Preps</span>
-            </Link>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <nav
+        className={`flex w-full items-center justify-between px-6 py-4 transition-all duration-300 md:px-16 ${
+          scrolled
+            ? "border-b border-white/10 bg-[#0b0b0d]/85 shadow-[0_8px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+            : "border-b border-white/[0.05] bg-[#0b0b0d]/30 backdrop-blur-md"
+        }`}
+      >
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 text-white transition-opacity hover:opacity-80">
+          <Image src="/cap.svg" alt="Logo" width={30} height={30} className="h-7 w-7" />
+          <span className="display text-lg tracking-tight">Campus Preps</span>
+        </Link>
 
-            {/* Navigation Items */}
-            <div className="hidden md:flex items-center space-x-1">
-              <NavItem href="/select-year?type=papers">Papers</NavItem>
-              <NavItem href="/select-year?type=materials">Materials</NavItem>
-              <NavItem href="/select-year?type=youtube">YouTube</NavItem>
-              <NavItem href="/favorites">Favorites</NavItem>
-              <NavItem href="/#contact">Contact</NavItem>
-            </div>
+        {/* Right cluster: Contact + auth */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/#contact"
+            className="hidden px-2 text-[15px] text-white/65 transition-colors hover:text-white sm:block"
+          >
+            Contact
+          </Link>
 
-            {/* Profile Button with Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-white/20 transition-colors"
+          <span className="hidden h-5 w-px bg-white/10 sm:block" />
+
+          {isAuthenticated && user ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowProfileMenu((s) => !s)}
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-white/20 transition hover:ring-white/40"
+                aria-label="Account menu"
               >
                 <Image
-                  src="/profile.svg"
+                  src={user?.image || "/profile.svg"}
                   alt="Profile"
-                  width={20}
-                  height={20}
-                  className="opacity-90 hover:opacity-100 transition-opacity"
+                  width={36}
+                  height={36}
+                  className="object-cover"
                 />
               </button>
 
-              {/* Profile Dropdown Menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 top-12 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1" role="menu">
-                    {isLoggedIn && userInfo ? (
-                      <>
-                        <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                          <div className="font-medium">{userInfo.name}</div>
-                          <div className="text-gray-500 truncate text-xs">{userInfo.email}</div>
-                        </div>
-                        <button
-                          onClick={handleProfileClick}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Your Profile
-                        </button>
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                        >
-                          Sign Out
-                        </button>
-                      </>
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-gray-700">
-                        Please sign in to continue
-                      </div>
-                    )}
+                <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#111113] shadow-2xl">
+                  <div className="border-b border-white/10 px-4 py-3">
+                    <div className="text-sm font-medium text-white">{user.name}</div>
+                    <div className="truncate text-xs text-white/45">{user.email}</div>
                   </div>
+                  <button
+                    onClick={() => {
+                      router.push("/profile");
+                      setShowProfileMenu(false);
+                    }}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-white/75 transition hover:bg-white/5 hover:text-white"
+                  >
+                    Your Profile
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-[#d98c74] transition hover:bg-white/5"
+                  >
+                    Sign Out
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden text-white hover:text-gray-300"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          ) : (
+            <button
+              onClick={login}
+              className="btn-primary focus-ring rounded-full px-5 py-2 text-sm font-medium"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d={isMobileMenuOpen 
-                    ? "M6 18L18 6M6 6l12 12" 
-                    : "M4 6h16M4 12h16M4 18h16"
-                  } 
-                />
-              </svg>
+              Log in
             </button>
-          </div>
-        </div>
+          )}
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-black/90 backdrop-blur-md rounded-b-2xl border-t border-white/10">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <MobileNavItem href="/select-year?type=papers">Papers</MobileNavItem>
-              <MobileNavItem href="/select-year?type=materials">Materials</MobileNavItem>
-              <MobileNavItem href="/select-year?type=youtube">YouTube</MobileNavItem>
-              <MobileNavItem href="/#contact">Contact</MobileNavItem>
-            </div>
-          </div>
-        )}
+          {/* Mobile: Contact lives in a tiny menu */}
+          <button
+            className="text-white/80 transition hover:text-white sm:hidden"
+            onClick={() => setIsMobileMenuOpen((o) => !o)}
+            aria-label="Toggle menu"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 7h16M4 12h16M4 17h16"}
+              />
+            </svg>
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile sheet */}
+      {isMobileMenuOpen && (
+        <div className="mx-4 mt-2 rounded-2xl border border-white/10 bg-[#0f0f11]/95 p-3 backdrop-blur-xl sm:hidden">
+          <Link
+            href="/#contact"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="block rounded-xl px-3 py-2.5 text-base text-white/80 transition hover:bg-white/5 hover:text-white"
+          >
+            Contact
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

@@ -24,7 +24,7 @@ export default function FormattedMessage({ content, isUser = false }) {
                 if (cleanItem) {
                   return (
                     <li key={itemIndex} className="flex items-start">
-                      <span className="text-blue-500 mr-3 mt-1 text-sm">•</span>
+                      <span className="mr-3 mt-1 text-sm text-[var(--accent)]">•</span>
                       <span className="flex-1 leading-relaxed">{formatInlineText(cleanItem)}</span>
                     </li>
                   );
@@ -48,7 +48,7 @@ export default function FormattedMessage({ content, isUser = false }) {
                   const [, number, cleanItem] = match;
                   return (
                     <li key={itemIndex} className="flex items-start">
-                      <span className="text-blue-600 font-semibold mr-3 mt-0.5 text-sm min-w-[1.5rem]">
+                      <span className="mr-3 mt-0.5 min-w-[1.5rem] text-sm font-semibold text-[var(--accent)]">
                         {number}.
                       </span>
                       <span className="flex-1 leading-relaxed">{formatInlineText(cleanItem)}</span>
@@ -66,7 +66,7 @@ export default function FormattedMessage({ content, isUser = false }) {
       if (trimmedSection.includes('**') && trimmedSection.length < 80) {
         const cleanTitle = trimmedSection.replace(/\*\*/g, '').trim();
         return (
-          <h4 key={index} className="font-semibold text-gray-800 my-3 text-base border-l-4 border-blue-500 pl-3">
+          <h4 key={index} className="my-3 border-l-2 border-[var(--accent)] pl-3 text-base font-semibold text-[var(--fg)]">
             {cleanTitle}
           </h4>
         );
@@ -76,7 +76,7 @@ export default function FormattedMessage({ content, isUser = false }) {
       if (trimmedSection.includes('```') || (trimmedSection.includes('`') && trimmedSection.length > 20)) {
         return (
           <div key={index} className="my-3">
-            <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-sm border border-gray-200">
+            <pre className="overflow-x-auto rounded-lg border border-[var(--line)] bg-black/40 p-3 text-sm text-[var(--fg-2)]">
               <code>{trimmedSection.replace(/```/g, '')}</code>
             </pre>
           </div>
@@ -85,7 +85,7 @@ export default function FormattedMessage({ content, isUser = false }) {
       
       // Regular paragraph
       return (
-        <p key={index} className="my-3 leading-relaxed text-gray-800">
+        <p key={index} className="my-3 leading-relaxed text-[var(--fg-2)]">
           {formatInlineText(trimmedSection)}
         </p>
       );
@@ -109,7 +109,7 @@ export default function FormattedMessage({ content, isUser = false }) {
       
       // Add the bold text
       parts.push(
-        <strong key={`bold-${boldMatch.index}`} className="font-semibold text-gray-900">
+        <strong key={`bold-${boldMatch.index}`} className="font-semibold text-[var(--fg)]">
           {boldMatch[1]}
         </strong>
       );
@@ -133,7 +133,7 @@ export default function FormattedMessage({ content, isUser = false }) {
         }
         
         codeParts.push(
-          <code key={`code-${codeMatch.index}`} className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-800">
+          <code key={`code-${codeMatch.index}`} className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm text-[var(--accent)]">
             {codeMatch[1]}
           </code>
         );

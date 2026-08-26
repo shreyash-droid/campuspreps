@@ -89,7 +89,7 @@ export default function ChatDialog({ isOpen, setIsOpen }) {
                       </Dialog.Title>
                       <button
                         type="button"
-                        className="rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                        className="rounded-md text-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                         onClick={() => setIsOpen(false)}
                       >
                         <XMarkIcon className="h-6 w-6" aria-hidden="true" />
@@ -162,7 +162,7 @@ export default function ChatDialog({ isOpen, setIsOpen }) {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-2 text-gray-400 hover:text-gray-500"
+                        className="p-2 text-gray-500 hover:text-gray-500"
                       >
                         <PaperClipIcon className="h-5 w-5" />
                       </button>

@@ -1,193 +1,97 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useFavorites } from '../context/FavoritesContext';
-import Link from 'next/link';
-import { HeartIcon, BookOpenIcon, DocumentTextIcon, LinkIcon } from '@heroicons/react/24/solid';
+import Link from "next/link";
+import { ExternalLink, FileText, BookOpen, Youtube } from "lucide-react";
+import { useFavorites } from "../context/FavoritesContext";
+import Navbar from "../components/navbar";
+import AuroraBackground from "../components/AuroraBackground";
+
+const SECTIONS = [
+  { key: "notes", title: "Module Notes", icon: BookOpen, label: (i) => `Module ${i.moduleNumber}` },
+  { key: "questionPapers", title: "Question Papers", icon: FileText, label: (i) => i.title },
+  { key: "youtubeLinks", title: "YouTube Links", icon: Youtube, label: (i) => i.title },
+];
 
 export default function FavoritesPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  const { favorites, loading: favoritesLoading, refreshFavorites } = useFavorites();
-  const [groupedFavorites, setGroupedFavorites] = useState({
-    notes: [],
-    pyq: [],
-    links: []
-  });
+  const { favorites, totalCount, hydrated } = useFavorites();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshFavorites();
-    }
-  }, [isAuthenticated, refreshFavorites]);
-
-  useEffect(() => {
-    // Group favorites by type
-    const grouped = favorites.reduce((acc, fav) => {
-      if (!acc[fav.itemType]) {
-        acc[fav.itemType] = [];
-      }
-      acc[fav.itemType].push(fav);
-      return acc;
-    }, { notes: [], pyq: [], links: [] });
-    
-    setGroupedFavorites(grouped);
-  }, [favorites]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-          <HeartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Required</h2>
-          <p className="text-gray-600 mb-6">
-            You need to be logged in to view your favorites.
-          </p>
-          <Link
-            href="/"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-          >
-            Go to Home Page
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const FavoriteSection = ({ title, items, type, icon: Icon, emptyMessage }) => (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center mb-4">
-        <Icon className="w-6 h-6 text-blue-600 mr-2" />
-        <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-        <span className="ml-2 bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-sm">
-          {items.length}
-        </span>
-      </div>
-      
-      {items.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">{emptyMessage}</p>
-      ) : (
-        <div className="space-y-3">
-          {items.map((item, index) => (
-            <div
-              key={`${item.itemType}_${item.itemId}_${index}`}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-            >
-              <div className="flex items-center">
-                <Icon className="w-4 h-4 text-gray-400 mr-3" />
-                <span className="text-gray-700">
-                  {type.charAt(0).toUpperCase() + type.slice(1)} ID: {item.itemId}
-                </span>
-              </div>
-              <HeartIcon className="w-5 h-5 text-red-500" />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  const openUrl = (item) => item.driveUrl || item.url || null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <HeartIcon className="w-8 h-8 text-red-500 mr-2" />
-            <h1 className="text-3xl font-bold text-gray-800">My Favorites</h1>
-          </div>
-          <p className="text-gray-600">
-            All your favorited notes, previous year questions, and links in one place
+    <div className="relative min-h-[calc(100vh-4rem)] text-[var(--fg)]">
+      <AuroraBackground />
+      <Navbar />
+
+      <section className="mx-auto w-[92%] max-w-4xl pt-10 pb-12">
+        <div className="mb-10 text-center">
+          <span className="eyebrow">Your library</span>
+          <h1 className="display mt-3 text-4xl md:text-5xl">Saved favourites</h1>
+          <p className="mt-3 text-[var(--fg-2)]">
+            Everything you&apos;ve starred, in one place.
           </p>
         </div>
 
-        {/* Loading State */}
-        {favoritesLoading && (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your favorites...</p>
+        {hydrated && totalCount === 0 ? (
+          <div className="card-surface rounded-3xl p-12 text-center">
+            <p className="text-lg text-[var(--fg)]">No favourites yet</p>
+            <p className="mt-2 text-[var(--fg-2)]">
+              Browse resources and tap the star to save them here.
+            </p>
+            <Link
+              href="/select-year"
+              className="btn-primary focus-ring mt-6 inline-block rounded-full px-6 py-2.5 text-sm font-medium"
+            >
+              Browse resources
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-10">
+            {SECTIONS.map(({ key, title, icon: Icon, label }) => {
+              const items = favorites[key] || [];
+              return (
+                <div key={key}>
+                  <div className="mb-4 flex items-center gap-2.5">
+                    <Icon className="h-5 w-5 text-[var(--accent)]" />
+                    <h2 className="text-lg font-medium text-[var(--fg)]">{title}</h2>
+                    <span className="rounded-full border border-[var(--line)] px-2 py-0.5 text-xs text-[var(--fg-2)]">
+                      {items.length}
+                    </span>
+                  </div>
+
+                  {items.length === 0 ? (
+                    <p className="text-sm text-[var(--fg-3)]">Nothing saved here yet.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {items.map((item, i) => {
+                        const url = openUrl(item);
+                        return (
+                          <div
+                            key={`${item.id}-${i}`}
+                            className={`card-surface rounded-2xl p-5 ${url ? "cursor-pointer" : ""}`}
+                            onClick={() => url && window.open(url, "_blank")}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-[var(--fg)]">{label(item)}</span>
+                              {url && <ExternalLink className="h-3.5 w-3.5 text-[var(--accent)]" />}
+                            </div>
+                            {(item.subject || item.year) && (
+                              <p className="mt-1 text-sm text-[var(--fg-3)]">
+                                {item.subject}
+                                {item.subject && item.year ? " · " : ""}
+                                {item.year ? `Year ${item.year}` : ""}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
-
-        {/* Favorites Content */}
-        {!favoritesLoading && (
-          <>
-            {favorites.length === 0 ? (
-              <div className="text-center py-12">
-                <HeartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No favorites yet</h3>
-                <p className="text-gray-500 mb-6">
-                  Start exploring and add your favorite notes, PYQs, and links!
-                </p>
-                <Link
-                  href="/select-year"
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-                >
-                  Browse Content
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-8">
-                <FavoriteSection
-                  title="Notes"
-                  items={groupedFavorites.notes}
-                  type="notes"
-                  icon={BookOpenIcon}
-                  emptyMessage="No favorite notes yet"
-                />
-                
-                <FavoriteSection
-                  title="Previous Year Questions"
-                  items={groupedFavorites.pyq}
-                  type="pyq"
-                  icon={DocumentTextIcon}
-                  emptyMessage="No favorite PYQs yet"
-                />
-                
-                <FavoriteSection
-                  title="Links"
-                  items={groupedFavorites.links}
-                  type="links"
-                  icon={LinkIcon}
-                  emptyMessage="No favorite links yet"
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Stats Summary */}
-        {!favoritesLoading && favorites.length > 0 && (
-          <div className="mt-8 bg-blue-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-blue-800 mb-2">Quick Stats</h4>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{groupedFavorites.notes.length}</div>
-                <div className="text-sm text-blue-600">Notes</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{groupedFavorites.pyq.length}</div>
-                <div className="text-sm text-blue-600">PYQs</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{groupedFavorites.links.length}</div>
-                <div className="text-sm text-blue-600">Links</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

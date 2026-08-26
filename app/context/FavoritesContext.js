@@ -1,139 +1,82 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from './AuthContext';
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-const FavoritesContext = createContext({
-  favorites: [],
-  loading: false,
-  isFavorited: () => false,
-  addToFavorites: () => {},
-  removeFromFavorites: () => {},
-  refreshFavorites: () => {},
-});
+const FavoritesContext = createContext(null);
 
+const EMPTY = { notes: [], questionPapers: [], youtubeLinks: [] };
+const STORAGE_KEY = "favorites";
+
+/**
+ * Single source of truth for favorites across the whole app.
+ * Backed by localStorage so it works for every visitor and syncs across tabs.
+ * Shape: { notes: [...items], questionPapers: [...items], youtubeLinks: [...items] }
+ */
 export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const [favorites, setFavorites] = useState(EMPTY);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Fetch user favorites when authenticated
+  // Load once on mount.
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchFavorites();
-    } else {
-      setFavorites([]);
-    }
-  }, [isAuthenticated]);
-
-  const fetchFavorites = async () => {
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setFavorites({ ...EMPTY, ...JSON.parse(stored) });
+    } catch {
+      /* ignore malformed storage */
+    }
+    setHydrated(true);
+  }, []);
 
-      const response = await fetch('/api/favorites', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  // Persist on every change (after hydration so we don't clobber stored data).
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [favorites, hydrated]);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setFavorites(data.favorites);
+  // Keep other tabs in sync.
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          setFavorites({ ...EMPTY, ...JSON.parse(e.newValue) });
+        } catch {
+          /* ignore */
         }
       }
-    } catch (error) {
-      console.error('Error fetching favorites:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
-  const isFavorited = (itemId, itemType) => {
-    return favorites.some(fav => 
-      fav.itemId === itemId && fav.itemType === itemType
-    );
-  };
+  const toggleFavorite = useCallback((type, item) => {
+    setFavorites((prev) => {
+      const arr = prev[type] || [];
+      const exists = arr.some((f) => f.id === item.id);
+      return {
+        ...prev,
+        [type]: exists ? arr.filter((f) => f.id !== item.id) : [...arr, item],
+      };
+    });
+  }, []);
 
-  const addToFavorites = async (itemId, itemType) => {
-    if (!isAuthenticated) return false;
+  const isFavorited = useCallback(
+    (type, id) => (favorites[type] || []).some((f) => f.id === id),
+    [favorites]
+  );
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/favorites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          action: 'add',
-          itemId,
-          itemType
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setFavorites(prev => [...prev, { itemId, itemType }]);
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('Error adding to favorites:', error);
-    }
-    return false;
-  };
-
-  const removeFromFavorites = async (itemId, itemType) => {
-    if (!isAuthenticated) return false;
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/favorites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          action: 'remove',
-          itemId,
-          itemType
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setFavorites(prev => 
-            prev.filter(fav => 
-              !(fav.itemId === itemId && fav.itemType === itemType)
-            )
-          );
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('Error removing from favorites:', error);
-    }
-    return false;
-  };
-
-  const value = {
-    favorites,
-    loading,
-    isFavorited,
-    addToFavorites,
-    removeFromFavorites,
-    refreshFavorites: fetchFavorites,
-  };
+  const totalCount =
+    (favorites.notes?.length || 0) +
+    (favorites.questionPapers?.length || 0) +
+    (favorites.youtubeLinks?.length || 0);
 
   return (
-    <FavoritesContext.Provider value={value}>
+    <FavoritesContext.Provider
+      value={{ favorites, toggleFavorite, isFavorited, totalCount, hydrated }}
+    >
       {children}
     </FavoritesContext.Provider>
   );
@@ -142,7 +85,7 @@ export function FavoritesProvider({ children }) {
 export const useFavorites = () => {
   const context = useContext(FavoritesContext);
   if (!context) {
-    throw new Error('useFavorites must be used within a FavoritesProvider');
+    throw new Error("useFavorites must be used within a FavoritesProvider");
   }
   return context;
 };

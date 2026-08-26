@@ -1,90 +1,111 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
-import LoginModal from "../components/LoginModal";
-import SignupModal from "../components/SignupModal";
-import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Hero() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const { user, isAuthenticated } = useAuth();
-
-  const handleLogin = () => {
-    setShowLogin(false);
-  };
-
-  const handleSignup = () => {
-    setShowSignup(false);
-  };
+  const { user, isAuthenticated, login } = useAuth();
+  const firstName = user?.name?.split(" ")[0];
 
   return (
-    <section className="relative flex flex-col md:flex-row items-center justify-between mt-24 md:mt-32 px-6 md:px-20 z-10">
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onLogin={handleLogin}
-          switchToSignup={() => {
-            setShowLogin(false);
-            setShowSignup(true);
-          }}
-        />
-      )}
-      {showSignup && (
-        <SignupModal
-          onClose={() => setShowSignup(false)}
-          onSignup={handleSignup}
-          switchToLogin={() => {
-            setShowSignup(false);
-            setShowLogin(true);
-          }}
-        />
-      )}
+    <section className="relative z-10 flex w-full flex-col items-center justify-center gap-10 px-6 pb-20 pt-16 md:px-16 md:pb-24 md:pt-20 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
+      {/* Copy */}
+      <div className="z-10 flex flex-col items-start text-left lg:max-w-[400px] xl:max-w-[460px] 2xl:max-w-[540px]">
+        <span className="reveal-in eyebrow flex items-center gap-2.5">
+          <span className="h-px w-6 bg-[var(--accent)]" />
+          {isAuthenticated ? `Welcome back${firstName ? `, ${firstName}` : ""}` : "Exam preparation, refined"}
+        </span>
 
-      <div className="flex flex-col items-start text-white z-10 text-left">
-        <h2 className="text-3xl md:text-6xl font-extrabold mb-4 font-roboto">Hello!!</h2>
-        <p className="text-3xl md:text-5xl leading-snug mb-10 font-roboto">
-          Welcome to your <span className="font-bold text-blue-600">one</span> <br />
-          <span className="font-bold text-blue-600">stop solution</span> for all<br />
-          the preparations..
+        <h1
+          className="reveal-in display mt-7 text-[2.6rem] text-[var(--fg)] md:text-[4.2rem]"
+          style={{ animationDelay: "80ms" }}
+        >
+          {isAuthenticated ? (
+            <>
+              Pick up right
+              <br />
+              where you{" "}
+              <em className="display-italic text-[var(--accent)]">left&nbsp;off</em>.
+            </>
+          ) : (
+            <>
+              Your <em className="display-italic text-[var(--accent)]">one&#8209;stop</em>
+              <br />
+              solution for every
+              <br />
+              preparation.
+            </>
+          )}
+        </h1>
+
+        <p
+          className="reveal-in mt-7 max-w-md text-lg leading-relaxed text-[var(--fg-2)]"
+          style={{ animationDelay: "160ms" }}
+        >
+          Previous-year papers, curated study material and hand-picked video lectures — organised by
+          year and subject, all in one quiet place.
         </p>
 
-        {isAuthenticated ? (
-          <Link
-            href="/select-year"
-            className="bg-blue-600 hover:bg-blue-700 transition duration-300 text-white text-xl md:text-2xl font-medium py-5 px-10 rounded-full shadow-lg"
-          >
-            Start Preparing →
-          </Link>
-        ) : (
-          <div className="flex flex-col md:flex-row gap-5 w-full md:w-auto">
-            <button
-              onClick={() => setShowSignup(true)}
-              className="bg-blue-600 hover:bg-blue-700 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-medium py-4 px-10 rounded-full shadow-lg"
+        <div
+          className="reveal-in mt-10 flex flex-wrap items-center gap-3"
+          style={{ animationDelay: "240ms" }}
+        >
+          {isAuthenticated ? (
+            <Link
+              href="/select-year"
+              className="btn-primary focus-ring group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-base font-medium"
             >
-              Sign-up
-            </button>
-            <button
-              onClick={() => setShowLogin(true)}
-              className="bg-none hover:bg-gray-800 hover:scale-110 transition duration-300 text-white text-xl md:text-2xl font-medium py-4 px-10 rounded-full border-2 border-white shadow-amber-50"
-            >
-              Login
-            </button>
-          </div>
-        )}
+              Start Preparing
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+            </Link>
+          ) : (
+            <>
+              <button
+                onClick={login}
+                className="btn-primary focus-ring group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-base font-medium"
+              >
+                Get Started
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </button>
+              <Link
+                href="/select-year"
+                className="btn-ghost focus-ring rounded-full px-8 py-3.5 text-base font-medium"
+              >
+                Browse resources
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Decorative Images & Blurs */}
-      <div className="relative flex items-end justify-center mt-10 z-10 gap-[-20px]">
-        <Image src="/left_man.svg" alt="Left Man" width={150} height={200} className="z-0 scale-200 -rotate-[30deg] -translate-x-35" />
-        <Image src="/centre_man.svg" alt="Center Man" width={150} height={200} className="z-10 scale-300 -translate-x-30 -translate-y-15" />
-        <Image src="/right_man.svg" alt="Right Man" width={150} height={200} className="z-0 scale-200 rotate-[30deg] -translate-x-25" />
+      {/* Decorative art — fluid cluster; figures overlap each other, never the copy */}
+      <div className="relative z-10 flex w-full items-end justify-center lg:w-[clamp(300px,37vw,860px)]">
+        <Image
+          src="/left_man.svg"
+          alt=""
+          width={150}
+          height={200}
+          className="float-y h-auto w-[42%] origin-bottom -rotate-[14deg] opacity-95"
+          style={{ animationDelay: "0.4s" }}
+        />
+        <Image
+          src="/centre_man.svg"
+          alt=""
+          width={150}
+          height={200}
+          className="float-y z-10 -mx-[24%] h-auto w-[60%] -translate-y-3"
+        />
+        <Image
+          src="/right_man.svg"
+          alt=""
+          width={150}
+          height={200}
+          className="float-y h-auto w-[42%] origin-bottom rotate-[14deg] opacity-95"
+          style={{ animationDelay: "0.8s" }}
+        />
       </div>
-
-      <div className="absolute w-[400px] h-[400px] top-[-100px] left-[-50px] rounded-[764px] bg-[radial-gradient(circle,_rgba(64,_120,_225,_0.7),_transparent)] blur-[100px] z-0" />
-      <div className="absolute w-[600px] h-[600px] bottom-[-100px] right-[130px] rounded-[764px] bg-[radial-gradient(circle,_rgba(255,_43,_255,_0.7),_transparent)] blur-[100px] z-0" />
     </section>
   );
 }

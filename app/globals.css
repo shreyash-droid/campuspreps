@@ -3,6 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ---- Premium dark system (quiet luxury) ---- */
+  --ink: #0a0a0b;          /* canvas */
+  --ink-2: #0f0f11;        /* raised background */
+  --surface: #141417;      /* cards */
+  --surface-2: #1a1a1e;    /* hover surface */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --fg: #f2f1ee;           /* warm white */
+  --fg-2: rgba(242, 241, 238, 0.58);
+  --fg-3: rgba(242, 241, 238, 0.36);
+  --accent: #c9a86a;       /* champagne — used sparingly */
+  --accent-soft: rgba(201, 168, 106, 0.14);
 }
 
 @theme inline {
@@ -10,6 +23,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display), Georgia, "Times New Roman", serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,11 +36,10 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   padding-top: 4rem; /* Add padding for fixed navbar */
 }
 
-/* Blur effect support for different browsers */
 @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
   .backdrop-blur-md {
     -webkit-backdrop-filter: blur(8px);
@@ -34,23 +47,103 @@ body {
   }
 }
 
-
 @layer utilities {
   @keyframes marquee {
     0% { transform: translateX(0%); }
     100% { transform: translateX(-100%); }
   }
-
   @keyframes marquee2 {
     0% { transform: translateX(100%); }
     100% { transform: translateX(0%); }
   }
+  .animate-marquee { animation: marquee 40s linear infinite; }
+  .animate-marquee2 { animation: marquee2 40s linear infinite; }
 
-  .animate-marquee {
-    animation: marquee 25s linear infinite;
+  /* Gentle float for decorative art */
+  @keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+  .float-y { animation: float-y 7s ease-in-out infinite; }
+
+  /* Entrance reveal */
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal-init { opacity: 0; }
+  .reveal-in { animation: reveal-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  /* ---- Premium primitives (shared across the site) ---- */
+
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
   }
 
-  .animate-marquee2 {
-    animation: marquee2 25s linear infinite;
+  .display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
   }
+  .display-italic { font-style: italic; }
+
+  .hairline { border: 1px solid var(--line); }
+
+  .card-surface {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+  }
+  .card-surface:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-2);
+  }
+
+  .btn-primary {
+    background: var(--fg);
+    color: #0a0a0b;
+    border: 1px solid transparent;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: translateY(1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--line-strong);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.28); }
+
+  /* Fine film grain overlay */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Premium focus ring */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee2,
+  .float-y,
+  .reveal-in {
+    animation: none !important;
+  }
+  .reveal-init { opacity: 1 !important; }
 }
