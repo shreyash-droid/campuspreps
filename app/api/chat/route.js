@@ -1,24 +1,18 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
 export async function POST(req) {
   try {
     const { message } = await req.json();
-    
+
     if (!message) {
       return NextResponse.json({ error: 'Message required' }, { status: 400 });
     }
 
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
-        // Generate content
-    console.log('Generating content...');
     const prompt = `As an educational AI assistant, help with this question: ${message}
 
 Please format your response in a clear, well-structured way:
@@ -30,18 +24,20 @@ Please format your response in a clear, well-structured way:
 - Focus on being helpful for students
 
 Question: ${message}`;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const completion = await groq.chat.completions.create({
+      model: 'openai/gpt-oss-120b',
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const text = completion.choices[0]?.message?.content || '';
 
     return NextResponse.json({ success: true, response: text });
-    
   } catch (error) {
     console.error('Chat API error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to process request',
-      details: error.message 
+      details: error.message,
     }, { status: 500 });
   }
 }
